@@ -1,0 +1,6 @@
+"0","primsummary2 <- primaryschools %>% group_by(subcounty,year,gender)%>% "
+"0","  summarise(total_enrollment=sum(enrolment))"
+"1","[38;5;232m`summarise()` has grouped output by 'subcounty', 'year'. You can override using the `.groups`
+argument.[39m
+"
+"0","primsummary2"

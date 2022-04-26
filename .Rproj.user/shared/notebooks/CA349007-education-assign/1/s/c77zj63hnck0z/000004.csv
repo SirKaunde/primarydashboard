@@ -1,0 +1,3 @@
+"0","#install.packages(""tidyverse"")"
+"0","prim_education <- read.csv(""./data/primary_enrollment_sctypesex.csv"")"
+"0","prim_education"

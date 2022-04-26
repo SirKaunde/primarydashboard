@@ -1,0 +1,195 @@
+---
+title: "education_assign"
+author: "Sam"
+date: "2/18/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#loading the packages
+
+```{r}
+library(dplyr)
+library(shiny)
+library(ggplot2)
+library(plotly)
+library(DBI)
+library(tidyverse)
+library(RSQLite)
+```
+
+#loading the datatables
+
+```{r}
+#install.packages("tidyverse")
+prim_education <- read.csv("./data/primary_enrollment_sctypesex.csv")
+prim_education
+```
+
+
+
+
+```{r}
+
+primdf <- prim_education %>%
+  pivot_longer(!subcounty, names_to = "Category",values_to = "Enrollment")%>%
+  mutate(Sex=ifelse(grepl("Boys",Category),"Male",
+                              ifelse(grepl("Girls",Category),"Female","Other")))%>%
+  mutate(Year=ifelse(grepl("2017",Category), "2017",
+                              ifelse(grepl("2018",Category),"2018",
+                              ifelse(grepl("2019",Category),"2019","Other"))))
+primdf
+
+
+
+```
+```{r}
+primary_long <- prim_education %>%
+  pivot_longer(cols = public_Boys_2017:private_Girls_2019,names_to = "schooltype_gender_year",values_to = "enrolment")%>%
+  separate("schooltype_gender_year",into = c("schooltype", "gender", "year"))
+primary_long
+```
+
+```{r}
+mycon <- dbConnect(SQLite(),"./data/primary_enrollment_sctypesex.db")
+dbListTables(mycon)
+#dbWriteTable(mycon, "primary_long",primary_long)
+
+cropprod.data <- dbConnect(SQLite(),"../education_assign/data/crop.prod_db.db")
+
+dbListTables(cropprod.data)
+
+hf.combined <- read.csv("data/hf.crops_combined.csv")
+```
+
+```{r}
+primaryschools <- dbReadTable(mycon,"primary_long")
+primaryschools
+```
+
+```{r}
+primsummary <- primaryschools %>% group_by(year,gender)%>% summarise(total_enrollment=sum(enrolment))
+primsummary
+```
+
+```{r}
+ggplot(primsummary,aes(x=year,y=total_enrollment,color=gender,group=gender))+
+  geom_line()
+
+```
+```{r}
+primsummary2 <- primaryschools %>% group_by(subcounty,year,gender)%>% 
+  summarise(total_enrollment=sum(enrolment))
+primsummary2
+```
+```{r}
+ggplot(primsummary2,aes(x=subcounty,y=total_enrollment,fill = gender, color=gender,group=gender))+
+  geom_bar(position="dodge",stat = "identity")
+```
+
+```{r}
+
+```
+
+
+```{r}
+primary_enrol <- primdf %>%
+  group_by(Year,Sex)%>%
+             summarise(total_enrollment=sum(Enrollment))
+             as.numeric(primary_enrol$total_enrollment)
+primary_enrol
+```
+fig <- plot_ly(data, x = ~x, y = ~trace_0, name = 'trace 0', type = 'scatter', mode = 'lines')
+fig <- fig %>% add_trace(y = ~trace_1, name = 'trace 1', mode = 'lines+markers')
+fig <- fig %>% add_trace(y = ~trace_2, name = 'trace 2', mode = 'markers')
+
+```{r}
+#ggplot(data = primary_enrol ,aes(x=Year,y=total_enrollment, fill=Sex, type = 'scatter', mode = 'lines'))+
+ # geom_col(position = position_dodge())
+  
+
+plot_ly(data=primary_enrol, x=~Year, y=~total_enrollment, name=~Sex, type = "scatter", mode="line")
+
+```
+primenrol_tot <- plot_ly(data=primary_enrol, x=~ as.character(year), y=~total_enrollment,  type = 'scatter', mode = 'lines', 
+                    marker = list(size=1,
+                                  color='Red',
+                                  line = list(color = 'blue',
+                                              width = 2))) %>%
+
+layout(xaxis = list(autotypenumbers = 'strict', title = 'Year'),
+         yaxis = list(title = 'Enrollment'),
+         plot_bgcolor='yellow',  title = "Total Enrolment",
+         xaxis = list(
+         
+           gridcolor = 'ffff'),
+         yaxis = list(
+           
+           gridcolor = 'red'))
+primenrol_tot
+
+```{r}
+prim_enrol <- prim_education %>%
+  
+ group_by(subcounty)%>%
+  #mutate()
+ # summarise(Total = sum(public_Boys_2017))
+  
+#  group_by(nzaui) %>% 
+ # filter(n() > 1) %>% 
+ # rowwise()  %>% 
+#publicboys2017 <- prim_enrol(sum(public_Boys_2017))   %>% 
+  #mutate(across(where(is.numeric)))  %>% 
+ #summarise(total = sum(across(where(is.numeric))))
+#mutate(total = sum(c_across(public_boys_2017:private_Girls_2019)))
+#summarise_if(is.numeric, sum)
+
+ mutate(total = rowSums(across(where(is.numeric))))
+  
+prim_enrol
+  
+```
+
+
+
+```{r}
+primenrol <- prim_education %>%
+mutate(Total_Row = rowSums(.[2:12]))
+primenrol
+
+```
+
+
+```{r}
+ dbcon <- dbConnect(SQLite(),"./data/primary_enrollment_sctypesex.db")
+
+dbListTables(conn = dbcon)
+
+
+primeduc_db <- read.csv("./data/primary_enrollment_sctypesex.csv")
+primeduc_db
+
+dbWriteTable(conn = dbcon, "PrimaryEnrolment", primeduc_db)
+dbListTables(conn = dbcon)
+
+#dbListTables(conn = dbcon)
+#education_enrol <- read.csv("./data/primary_enrollment_sctypesex.csv")
+#education_enrol
+
+#dbWriteTable(conn = dbcon, "education_enr", education_enrol)
+#dbListTables(conn = dbcon)
+
+education_db <- dbGetQuery(conn = dbcon,statement = "select * from PrimaryEnrollment")
+education_db
+    
+```
+
+```{r}
+
+```
+
+

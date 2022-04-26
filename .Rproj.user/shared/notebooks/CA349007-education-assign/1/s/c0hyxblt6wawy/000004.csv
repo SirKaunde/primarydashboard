@@ -1,0 +1,4 @@
+"0","primary_long <- prim_education %>%"
+"0","  pivot_longer(cols = public_Boys_2017:private_Girls_2019,names_to = ""schooltype_gender_year"",values_to = ""enrolment"")%>%"
+"0","  separate(""schooltype_gender_year"",into = c(""schooltype"", ""gender"", ""year""))"
+"0","primary_long"
